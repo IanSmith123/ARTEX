@@ -22,11 +22,17 @@ function mergeActivities(oldItems: Activity[], incoming: Activity[]) {
 export function FindingAutoChat({
   findingId,
   findingTitle,
+  agentKey = "auto",
+  agentLabel = "Auto Agent",
+  promptPlaceholder = "询问这个漏洞…",
   open,
   onOpenChange,
 }: {
     findingId: string;
   findingTitle: string;
+  agentKey?: string;
+  agentLabel?: string;
+  promptPlaceholder?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -42,7 +48,7 @@ export function FindingAutoChat({
   const [history, setHistory] = React.useState<Conversation[]>([]);
   const cursor = React.useRef(0);
   const safeTitle = findingTitle.replace(/[\[\]\r\n]/g, " ").trim().slice(0, 100);
-  const storageKey = `artex.finding.auto-conversation.${findingId}`;
+  const storageKey = `artex.finding.${agentKey}-conversation.${findingId}`;
 
   const createConversation = React.useCallback(async () => {
     setManualEmpty(false);
@@ -50,7 +56,7 @@ export function FindingAutoChat({
     setRunning(false);
     setLoading(true);
     try {
-      const created = await api.createConversation("auto", `漏洞 #${findingId} · ${safeTitle}`);
+      const created = await api.createConversation(agentKey, `漏洞 #${findingId} · ${safeTitle}`);
       window.localStorage.setItem(storageKey, String(created.id));
       setConversation(created);
     } catch (error) {
@@ -58,7 +64,7 @@ export function FindingAutoChat({
     } finally {
       setLoading(false);
     }
-  }, [findingId, safeTitle, storageKey]);
+  }, [agentKey, findingId, safeTitle, storageKey]);
 
   React.useEffect(() => {
     if (!open || conversation || manualEmpty) return;
@@ -66,7 +72,7 @@ export function FindingAutoChat({
     if (Number.isSafeInteger(storedID) && storedID > 0) {
       setConversation({
         id: storedID,
-        agent_key: "auto",
+        agent_key: agentKey,
         title: `漏洞 #${findingId} · ${safeTitle}`,
         created_at: "",
         updated_at: "",
@@ -85,7 +91,7 @@ export function FindingAutoChat({
         const items = await api.conversations();
         if (!live) return;
         const prefix = `漏洞 #${findingId} ·`;
-        setHistory(items.filter((item) => item.agent_key === "auto" && item.title.startsWith(prefix)));
+        setHistory(items.filter((item) => item.agent_key === agentKey && item.title.startsWith(prefix)));
       } catch {
         if (live && historyOpen) setHistory([]);
       } finally {
@@ -97,7 +103,7 @@ export function FindingAutoChat({
       live = false;
       clearTimeout(timer);
     };
-  }, [findingId, historyOpen, running]);
+  }, [agentKey, findingId, historyOpen, running]);
 
   React.useEffect(() => {
     if (!open || !conversation) return;
@@ -209,7 +215,7 @@ export function FindingAutoChat({
           <BotIcon className="size-4 text-primary" />
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-2 font-medium">
-              Auto Agent
+              {agentLabel}
               {running && <span className="inline-flex items-center gap-1 rounded bg-blue-500/15 px-1.5 py-0.5 text-blue-600 text-xs"><span className="size-1.5 animate-pulse rounded-full bg-blue-500" />运行中</span>}
             </p>
             <p className="truncate text-muted-foreground text-xs">漏洞 #{findingId} · {safeTitle}</p>
@@ -274,7 +280,7 @@ export function FindingAutoChat({
               inputGroup
               onValueChange={setInput}
               disabled={!conversation || loading || sending || running}
-              placeholder="询问这个漏洞…"
+              placeholder={promptPlaceholder}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                   event.preventDefault();
