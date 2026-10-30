@@ -76,7 +76,7 @@ export function FindingAutoChat({
       setConversation({ id: initialConversationId, agent_key: agentKey, title: `漏洞 #${findingId} · ${safeTitle}`, created_at: "", updated_at: "" });
       return;
     }
-    const storedID = Number(window.localStorage.getItem(storageKey));
+    const storedID = agentKey === "auto" ? Number(window.localStorage.getItem(storageKey)) : 0;
     if (Number.isSafeInteger(storedID) && storedID > 0) {
       setConversation({
         id: storedID,
