@@ -51,6 +51,7 @@ export function FindingAutoChat({
   const [historyOpen, setHistoryOpen] = React.useState(false);
   const [history, setHistory] = React.useState<Conversation[]>([]);
   const cursor = React.useRef(0);
+  const chatViewportRef = React.useRef<HTMLDivElement | null>(null);
   const safeTitle = findingTitle.replace(/[\[\]\r\n]/g, " ").trim().slice(0, 100);
   const storageKey = `artex.finding.${agentKey}-conversation.${findingId}`;
 
@@ -135,6 +136,18 @@ export function FindingAutoChat({
       live = false;
     };
   }, [conversation, open, storageKey]);
+
+  React.useEffect(() => {
+    if (!open || !conversation || loading || !messages.length) return;
+    const viewport = chatViewportRef.current;
+    if (!viewport) return;
+    const key = `artex.conversation-scroll.${conversation.id}`;
+    const saved = window.sessionStorage.getItem(key);
+    requestAnimationFrame(() => {
+      if (saved != null) viewport.scrollTop = Number(saved) || 0;
+      else viewport.scrollTop = viewport.scrollHeight;
+    });
+  }, [conversation, loading, messages.length, open]);
 
   React.useEffect(() => {
     if (!open || !conversation || !running) return;
@@ -271,7 +284,13 @@ export function FindingAutoChat({
             <XIcon />
           </Button>
         </header>
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3">
+        <div
+          ref={chatViewportRef}
+          onScroll={(event) => {
+            if (conversation) window.sessionStorage.setItem(`artex.conversation-scroll.${conversation.id}`, String(event.currentTarget.scrollTop));
+          }}
+          className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3"
+        >
           <div className="w-full min-w-0 max-w-full">
             {loading ? (
               <div className="flex items-center justify-center py-10 text-muted-foreground text-sm">

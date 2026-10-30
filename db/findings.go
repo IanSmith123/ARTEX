@@ -705,7 +705,11 @@ func (d *DB) ResolveFindingReportConversation(findingID int64) (*int64, error) {
 	 a.detail ILIKE '%finding_id=' || $1::text || '%' OR
 	 a.detail ILIKE '%"finding_id":' || $1::text || '%'
 	)
-	ORDER BY c.updated_at DESC, c.id DESC LIMIT 1`, findingID).Scan(&id)
+	ORDER BY CASE WHEN EXISTS (
+		SELECT 1 FROM conversation_activities r
+		WHERE r.conversation_id=c.id AND (r.tool='update_finding_report' OR r.summary ILIKE 'finding % report updated%')
+	) THEN 0 ELSE 1 END,
+	c.created_at ASC, c.id ASC LIMIT 1`, findingID).Scan(&id)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
