@@ -423,6 +423,7 @@ function FindingDetailInner() {
         agentKey="reporter"
         agentLabel="报告撰写 Agent"
         promptPlaceholder="描述要如何调整漏洞报告…"
+        modal
         open={reportChatOpen}
         onOpenChange={setReportChatOpen}
       />

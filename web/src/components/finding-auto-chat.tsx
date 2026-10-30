@@ -25,6 +25,7 @@ export function FindingAutoChat({
   agentKey = "auto",
   agentLabel = "Auto Agent",
   promptPlaceholder = "询问这个漏洞…",
+  modal = false,
   open,
   onOpenChange,
 }: {
@@ -33,6 +34,7 @@ export function FindingAutoChat({
   agentKey?: string;
   agentLabel?: string;
   promptPlaceholder?: string;
+  modal?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -209,8 +211,12 @@ export function FindingAutoChat({
   if (!open) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-20 z-40 flex justify-end px-4 pb-4 sm:px-6">
-      <section className="pointer-events-auto flex min-w-0 h-[calc(100svh-6rem)] w-[min(520px,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border bg-background shadow-2xl">
+    <div className={modal
+      ? "pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4"
+      : "pointer-events-none fixed inset-x-0 top-20 z-40 flex justify-end px-4 pb-4 sm:px-6"}>
+      <section className={modal
+        ? "pointer-events-auto flex min-w-0 h-[min(760px,calc(100svh-2rem))] w-[min(760px,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border bg-background shadow-2xl"
+        : "pointer-events-auto flex min-w-0 h-[calc(100svh-6rem)] w-[min(520px,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border bg-background shadow-2xl"}>
         <header className="flex items-center gap-2 border-b p-3">
           <BotIcon className="size-4 text-primary" />
           <div className="min-w-0 flex-1">
