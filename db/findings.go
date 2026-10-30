@@ -680,12 +680,42 @@ func (d *DB) GetFinding(id int64) (*DBFinding, error) {
 	if reportConv.Valid {
 		f.ReportConversationID = &reportConv.Int64
 	}
+	if f.ReportConversationID == nil && strings.TrimSpace(f.Report) != "" {
+		if resolved, resolveErr := d.ResolveFindingReportConversation(f.ID); resolveErr == nil {
+			f.ReportConversationID = resolved
+		}
+	}
 	return f, nil
 }
 
 func (d *DB) SetFindingReportConversationID(findingID, conversationID int64) error {
 	_, err := d.Exec(`UPDATE findings SET report_conversation_id=$2 WHERE id=$1`, findingID, conversationID)
 	return err
+}
+
+// ResolveFindingReportConversation backfills links for reports generated before
+// report_conversation_id was persisted.
+func (d *DB) ResolveFindingReportConversation(findingID int64) (*int64, error) {
+	var id int64
+	err := d.QueryRow(`SELECT c.id FROM conversations c
+	JOIN conversation_activities a ON a.conversation_id=c.id
+	WHERE c.agent_key='reporter' AND (
+	 c.title = '漏洞报告 · finding#' || $1::text OR
+	 c.title ILIKE '%finding#' || $1::text || '%' OR
+	 a.detail ILIKE '%finding_id=' || $1::text || '%' OR
+	 a.detail ILIKE '%"finding_id":' || $1::text || '%'
+	)
+	ORDER BY c.updated_at DESC, c.id DESC LIMIT 1`, findingID).Scan(&id)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := d.SetFindingReportConversationID(findingID, id); err != nil {
+		return nil, err
+	}
+	return &id, nil
 }
 
 // DeleteFinding removes a finding entirely: the standalone findings row and its
