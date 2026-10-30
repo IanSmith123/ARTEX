@@ -26,6 +26,7 @@ export function FindingAutoChat({
   agentLabel = "Auto Agent",
   promptPlaceholder = "询问这个漏洞…",
   modal = false,
+  initialConversationId,
   open,
   onOpenChange,
 }: {
@@ -35,6 +36,7 @@ export function FindingAutoChat({
   agentLabel?: string;
   promptPlaceholder?: string;
   modal?: boolean;
+  initialConversationId?: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -70,6 +72,10 @@ export function FindingAutoChat({
 
   React.useEffect(() => {
     if (!open || conversation || manualEmpty) return;
+    if (initialConversationId && initialConversationId > 0) {
+      setConversation({ id: initialConversationId, agent_key: agentKey, title: `漏洞 #${findingId} · ${safeTitle}`, created_at: "", updated_at: "" });
+      return;
+    }
     const storedID = Number(window.localStorage.getItem(storageKey));
     if (Number.isSafeInteger(storedID) && storedID > 0) {
       setConversation({
@@ -82,7 +88,7 @@ export function FindingAutoChat({
       return;
     }
     void createConversation();
-  }, [conversation, createConversation, manualEmpty, open, safeTitle, storageKey]);
+  }, [conversation, createConversation, initialConversationId, manualEmpty, open, safeTitle, storageKey]);
 
   React.useEffect(() => {
     if (!historyOpen && !running) return;

@@ -424,6 +424,7 @@ function FindingDetailInner() {
         agentLabel="报告撰写 Agent"
         promptPlaceholder="描述要如何调整漏洞报告…"
         modal
+        initialConversationId={finding.report_conversation_id}
         open={reportChatOpen}
         onOpenChange={setReportChatOpen}
       />
