@@ -78,7 +78,7 @@ function AuthenticatedImage({
         onClick={() => renderedSrc && setZoomed(true)}
         aria-label="放大查看报告截图"
       >
-        <img {...props} src={renderedSrc} alt={alt || "报告截图，点击放大"} />
+        <img {...props} src={renderedSrc} alt={alt || "报告截图，点击放大"} draggable={false} onDragStart={(event) => event.preventDefault()} />
         {timestamp}
       </button>
       <Dialog
@@ -118,6 +118,8 @@ function AuthenticatedImage({
               <img
                 src={renderedSrc}
                 alt={alt || "报告截图"}
+                draggable={false}
+                onDragStart={(event) => event.preventDefault()}
                 className="max-h-[90dvh] max-w-[90vw] rounded-md object-contain"
               />
               {timestamp}
